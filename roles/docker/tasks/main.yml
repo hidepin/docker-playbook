@@ -1,5 +1,19 @@
 ---
 # file: roles/docker/tasks/main.yml
+- name: EPEL install check
+  command: rpm -q epel-release
+  register: inst_epel
+  failed_when: inst_epel.rc not in [0,1]
+  changed_when: inst_epel.rc != 0
+
+- name: copy EPEL rpm
+  copy: src={{epel}} dest=/tmp
+  when: inst_epel.rc != 0
+
+- name: EPEL install
+  yum: name=/tmp/{{epel}} state=present
+  when: inst_epel.rc != 0
+
 - name: packages install
   yum: name={{item}} state=present
   with_items:
