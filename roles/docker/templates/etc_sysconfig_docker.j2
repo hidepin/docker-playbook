@@ -4,7 +4,7 @@
 # These will be parsed by the sysv initscript and appended
 # to the arguments list passed to docker -d
 
-other_args="-H tcp://127.0.0.1:4243"
+other_args="-H tcp://127.0.0.1:{{docker_port}}"
 DOCKER_CERT_PATH=/etc/docker
 
 # Location used for temporary files, such as those created by

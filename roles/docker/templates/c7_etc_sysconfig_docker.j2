@@ -1,7 +1,7 @@
 # /etc/sysconfig/docker
 
 # Modify these options if you want to change the way the docker daemon runs
-OPTIONS='-H tcp://127.0.0.1:4243'
+OPTIONS='-H tcp://127.0.0.1:{{docker_port}}'
 
 DOCKER_CERT_PATH=/etc/docker
 

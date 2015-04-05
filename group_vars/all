@@ -2,3 +2,4 @@ ansible_ssh_user: root
 sudo: no
 colon: ":"
 epel: epel-release-6-8.noarch.rpm
+docker_port: 4243
