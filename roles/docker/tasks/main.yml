@@ -15,15 +15,27 @@
   yum: name=/tmp/{{epel}} state=present
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6" and inst_epel.rc != 0
 
-- name: packages install
+- name: packages install (pkg name docker-io)
   yum: name={{item}} state=present
   with_items:
     - docker-io
+  when: not (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7")
+
+- name: packages install (pkg name docker)
+  yum: name={{item}} state=present
+  with_items:
+    - docker
+  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
 
 - name: add docker system settings for CentOS6
   template: src=etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
   notify: docker restart
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
+
+- name: add docker system settings for CentOS7
+  template: src=c7_etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
+  notify: docker restart
+  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
 
 - name: add docker system settings for Fedora21
   template: src=f21_etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644

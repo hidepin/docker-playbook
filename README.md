@@ -7,6 +7,7 @@
 ### (対応OS)
 * CentOS 6.x x86_64
 * Fedora 21  x86_64
+* CentOS 7.x x86_64 (CentOS7.1以降)
 
 ### (設定内容)
 * dockerパッケージのインストール
