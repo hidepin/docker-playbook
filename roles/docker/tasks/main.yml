@@ -20,10 +20,15 @@
   with_items:
     - docker-io
 
-- name: add docker system settings
+- name: add docker system settings for CentOS6
   template: src=etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
   notify: docker restart
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
+
+- name: add docker system settings for Fedora21
+  template: src=f21_etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
+  notify: docker restart
+  when: ansible_distribution == "Fedora" and ansible_distribution_major_version == "21"
 
 - name: add docker user settings
   template: src=etc_profile.d_enabledocker.sh.j2 dest=/etc/profile.d/enabledocker.sh owner=root group=root mode=0644
