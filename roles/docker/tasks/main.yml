@@ -19,13 +19,19 @@
   yum: name={{item}} state=present
   with_items:
     - docker-io
-  when: not (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7")
+  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "6") or ansible_distribution == "Fedora"
 
 - name: packages install (pkg name docker)
   yum: name={{item}} state=present
   with_items:
     - docker
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+
+- name: packages install (pkg name docker)
+  apt: name={{item}} state=present
+  with_items:
+    - docker.io
+  when: ansible_distribution == "Ubuntu"
 
 - name: add docker system settings for CentOS6
   template: src=etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
@@ -44,6 +50,7 @@
 
 - name: add docker user settings
   template: src=etc_profile.d_enabledocker.sh.j2 dest=/etc/profile.d/enabledocker.sh owner=root group=root mode=0644
+  when: not ansible_distribution == "Ubuntu"
 
 - name: enable docker service
   service: name=docker state=started enabled=yes
