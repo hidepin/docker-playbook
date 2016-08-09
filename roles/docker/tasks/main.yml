@@ -1,5 +1,15 @@
 ---
 # file: roles/docker/tasks/main.yml
+- name: register subscription
+  redhat_subscription: state=present
+                       username={{ rhel_subscription_username }}
+                       password={{ rhel_subscription_password }}
+                       autosubscribe=true
+  when: ansible_distribution == "RedHat" and
+        ansible_distribution_major_version == "7" and
+        rhel_subscription_username is defined and
+        rhel_subscription_password is defined
+
 - name: EPEL install check
   command: rpm -q epel-release
   register: inst_epel
@@ -15,33 +25,48 @@
   yum: name=/tmp/{{epel}} state=present
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6" and inst_epel.rc != 0
 
-- name: packages install (pkg name docker-io)
-  yum: name={{item}} state=present
+- name: docker install for RHEL7.x
+  yum: name={{item}} state=present enablerepo=rhel-7-server-extras-rpms
   with_items:
-    - docker-io
-  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "6") or ansible_distribution == "Fedora"
+    - docker
+  when: ansible_distribution == "RedHat" and
+        ansible_distribution_major_version == "7" and
+        rhel_subscription_username is defined and
+        rhel_subscription_password is defined
 
-- name: packages install (pkg name docker)
+- name: docker install for CentOS7
   yum: name={{item}} state=present
   with_items:
     - docker
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
 
-- name: packages install (pkg name docker)
+- name: docker install for CentOS6.x or Fedora
+  yum: name={{item}} state=present
+  with_items:
+    - docker-io
+  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "6") or
+        ansible_distribution == "Fedora"
+
+- name: docker install for ubuntu
   apt: name={{item}} state=present
   with_items:
     - docker.io
   when: ansible_distribution == "Ubuntu"
 
-- name: add docker system settings for CentOS6
-  template: src=etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
+- name: add docker system settings for RedHat7.x
+  template: src=c7_etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
   notify: docker restart
-  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
+  when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
 
-- name: add docker system settings for CentOS7
+- name: add docker system settings for CentOS7.x
   template: src=c7_etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
   notify: docker restart
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+
+- name: add docker system settings for CentOS6.x
+  template: src=etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
+  notify: docker restart
+  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
 
 - name: add docker system settings for Fedora21
   template: src=f21_etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
