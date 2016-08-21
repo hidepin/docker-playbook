@@ -26,7 +26,7 @@
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6" and inst_epel.rc != 0
 
 - name: docker install for RHEL7.x
-  yum: name={{item}} state=present enablerepo=rhel-7-server-extras-rpms
+  yum: name={{item}} state=present enablerepo=rhel-7-server-extras-rpms disablerepo=rhel-7-server-rt-beta-rpms
   with_items:
     - docker
   when: ansible_distribution == "RedHat" and
