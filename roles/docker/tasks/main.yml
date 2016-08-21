@@ -30,9 +30,7 @@
   with_items:
     - docker
   when: ansible_distribution == "RedHat" and
-        ansible_distribution_major_version == "7" and
-        rhel_subscription_username is defined and
-        rhel_subscription_password is defined
+        ansible_distribution_major_version == "7"
 
 - name: docker install for CentOS7
   yum: name={{item}} state=present
@@ -57,9 +55,7 @@
   template: src=r7_etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
   notify: docker restart
   when: ansible_distribution == "RedHat" and
-        ansible_distribution_major_version == "7" and
-        rhel_subscription_username is defined and
-        rhel_subscription_password is defined
+        ansible_distribution_major_version == "7"
 
 - name: add docker system settings for CentOS7.x
   template: src=c7_etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
