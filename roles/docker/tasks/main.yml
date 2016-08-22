@@ -51,6 +51,9 @@
     - docker.io
   when: ansible_distribution == "Ubuntu"
 
+- name: add docker logrotate settings
+  template: src=etc_logrotate.d_docker.j2 dest=/etc/logrotate.d/docker owner=root group=root mode=0644
+
 - name: add docker system settings for RedHat7.x
   template: src=r7_etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
   notify: docker restart
