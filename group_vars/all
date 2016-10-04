@@ -4,4 +4,4 @@ colon: ":"
 ###rhel_subscription_username: username
 ###rhel_subscription_password: password
 epel: epel-release-6-8.noarch.rpm
-docker_port: 4243
+docker_port: 2376
