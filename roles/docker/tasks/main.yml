@@ -30,6 +30,19 @@
 
 - name: docker install
   package: name="{{ docker_pkg_name }}" state=present
+  when: >
+    not
+    (ansible_distribution == "RedHat" and
+    ansible_distribution_major_version == "7")
+
+- name: docker install for RHEL7
+  yum: >
+    name="{{ docker_pkg_name }}"
+    state=present
+    enablerepo=rhel-7-server-extras-rpms
+  when: >
+    ansible_distribution == "RedHat" and
+    ansible_distribution_major_version == "7"
 
 - block:
   - name: add docker system settings for RedHat6 Family
@@ -69,7 +82,10 @@
       mode=0644
       backup=yes
     register: is_etc_logrotate_d_docker_setting
-    when: not (ansible_os_family == "RedHat" and ansible_distribution_major_version == "7")
+    when: >
+      not
+      (ansible_os_family == "RedHat" and
+      ansible_distribution_major_version == "7")
 
   - name: add docker user settings
     template: >
