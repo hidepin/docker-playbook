@@ -1,54 +1,48 @@
 ---
 # file: roles/docker/tasks/main.yml
-- name: register subscription
-  redhat_subscription: state=present
-                       username={{ rhel_subscription_username }}
-                       password={{ rhel_subscription_password }}
-                       autosubscribe=true
-  when: ansible_distribution == "RedHat" and
-        ansible_distribution_major_version == "7" and
-        rhel_subscription_username is defined and
-        rhel_subscription_password is defined
+- name: register subscription and yum proxy setting
+  include: yum_setup.yml
+  when: ansible_distribution == "RedHat"
 
 - name: EPEL install check
   command: rpm -q epel-release
   register: inst_epel
   failed_when: inst_epel.rc not in [0,1]
   changed_when: inst_epel.rc != 0
-  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
-
-- name: copy EPEL rpm
-  copy: src={{epel}} dest=/tmp
-  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6" and inst_epel.rc != 0
+  when: >
+    ansible_distribution == "CentOS" and
+    ansible_distribution_major_version == "6"
 
 - name: EPEL install
-  yum: name=/tmp/{{epel}} state=present
-  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6" and inst_epel.rc != 0
+  yum: name={{ epel6_family }} state=present
+  when: >
+    ansible_distribution == "CentOS" and
+    ansible_distribution_major_version == "6" and
+    inst_epel.rc != 0
 
-- name: docker install for RHEL7.x
-  yum: name={{item}} state=present enablerepo=rhel-7-server-extras-rpms disablerepo=rhel-7-server-rt-beta-rpms
-  with_items:
-    - docker
-  when: ansible_distribution == "RedHat" and
-        ansible_distribution_major_version == "7"
+- name: docker install for CentOS6
+  yum: name={{ docker_name_rhel6_family }} state=present
+  when: >
+    ansible_distribution == "CentOS" and
+    ansible_distribution_major_version == "6"
+
+- name: docker install for RHEL7
+  yum: >
+    name={{ docker_name_rhel7_family }}
+    state=present
+    enablerepo=rhel-7-server-extras-rpms
+  when: >
+    ansible_distribution == "RedHat" and
+    ansible_distribution_major_version == "7"
 
 - name: docker install for CentOS7
-  yum: name={{item}} state=present
-  with_items:
-    - docker
-  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
-
-- name: docker install for CentOS6.x or Fedora
-  yum: name={{item}} state=present
-  with_items:
-    - docker-io
-  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "6") or
-        ansible_distribution == "Fedora"
+  yum: name={{ docker_name_rhel7_family }} state=present
+  when: >
+    ansible_distribution == "CentOS" and
+    ansible_distribution_major_version == "7"
 
 - name: docker install for ubuntu
-  apt: name={{item}} state=present
-  with_items:
-    - docker.io
+  apt: name={{ docker_name_ubuntu }} state=present
   when: ansible_distribution == "Ubuntu"
 
 - name: add docker logrotate settings
