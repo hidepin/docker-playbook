@@ -45,9 +45,15 @@
   apt: name="{{ docker_name_ubuntu }}" state=present
   when: ansible_distribution == "Ubuntu"
 
-- name: add docker logrotate settings
-  template: src=etc_logrotate.d_docker.j2 dest=/etc/logrotate.d/docker owner=root group=root mode=0644
-  when: not (ansible_os_family == "RedHat" and ansible_distribution_major_version == "7")
+- name: add docker system settings for RedHat6 Family
+  template: >
+    src=etc_sysconfig_docker_rhel6_family.j2
+    dest="/etc/sysconfig/docker"
+    owner=root
+    group=root
+    mode=0644
+  notify: docker restart
+  when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "6"
 
 - name: add docker system settings for RedHat7 family
   template: >
@@ -61,15 +67,9 @@
     ansible_os_family == "RedHat" and
     ansible_distribution_major_version == "7"
 
-- name: add docker system settings for RedHat6 Family
-  template: >
-    src=etc_sysconfig_docker_rhel6_family.j2
-    dest="/etc/sysconfig/docker"
-    owner=root
-    group=root
-    mode=0644
-  notify: docker restart
-  when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "6"
+- name: add docker logrotate settings
+  template: src=etc_logrotate.d_docker.j2 dest=/etc/logrotate.d/docker owner=root group=root mode=0644
+  when: not (ansible_os_family == "RedHat" and ansible_distribution_major_version == "7")
 
 - name: add docker user settings
   template: src=etc_profile.d_enabledocker.sh.j2 dest=/etc/profile.d/enabledocker.sh owner=root group=root mode=0644
