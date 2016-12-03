@@ -14,21 +14,21 @@
     ansible_distribution_major_version == "6"
 
 - name: EPEL install
-  yum: name={{ epel6_family }} state=present
+  yum: name="{{ epel6_family }}" state=present
   when: >
     ansible_os_family == "RedHat" and
     ansible_distribution_major_version == "6" and
     inst_epel.rc != 0
 
 - name: docker install for RedHat6 family
-  yum: name={{ docker_name_rhel6_family }} state=present
+  yum: name="{{ docker_name_rhel6_family }}" state=present
   when: >
     ansible_os_family == "RedHat" and
     ansible_distribution_major_version == "6"
 
 - name: docker install for RHEL7
   yum: >
-    name={{ docker_name_rhel7_family }}
+    name="{{ docker_name_rhel7_family }}"
     state=present
     enablerepo=rhel-7-server-extras-rpms
   when: >
@@ -36,39 +36,40 @@
     ansible_distribution_major_version == "7"
 
 - name: docker install for CentOS7
-  yum: name={{ docker_name_rhel7_family }} state=present
+  yum: name="{{ docker_name_rhel7_family }}" state=present
   when: >
     ansible_distribution == "CentOS" and
     ansible_distribution_major_version == "7"
 
 - name: docker install for ubuntu
-  apt: name={{ docker_name_ubuntu }} state=present
+  apt: name="{{ docker_name_ubuntu }}" state=present
   when: ansible_distribution == "Ubuntu"
 
 - name: add docker logrotate settings
   template: src=etc_logrotate.d_docker.j2 dest=/etc/logrotate.d/docker owner=root group=root mode=0644
   when: not (ansible_os_family == "RedHat" and ansible_distribution_major_version == "7")
 
-- name: add docker system settings for RedHat7.x
-  template: src=r7_etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
+- name: add docker system settings for RedHat7 family
+  template: >
+    src=etc_sysconfig_docker_rhel7_family.j2
+    dest="/etc/sysconfig/{{ docker_name_rhel7_family }}"
+    owner=root
+    group=root
+    mode=0644
   notify: docker restart
-  when: ansible_distribution == "RedHat" and
-        ansible_distribution_major_version == "7"
+  when: >
+    ansible_os_family == "RedHat" and
+    ansible_distribution_major_version == "7"
 
-- name: add docker system settings for CentOS7.x
-  template: src=c7_etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
+- name: add docker system settings for RedHat6 Family
+  template: >
+    src=etc_sysconfig_docker_rhel6_family.j2
+    dest="/etc/sysconfig/docker"
+    owner=root
+    group=root
+    mode=0644
   notify: docker restart
-  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
-
-- name: add docker system settings for CentOS6.x
-  template: src=etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
-  notify: docker restart
-  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
-
-- name: add docker system settings for Fedora21
-  template: src=f21_etc_sysconfig_docker.j2 dest=/etc/sysconfig/docker owner=root group=root mode=0644
-  notify: docker restart
-  when: ansible_distribution == "Fedora" and ansible_distribution_major_version == "21"
+  when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "6"
 
 - name: add docker user settings
   template: src=etc_profile.d_enabledocker.sh.j2 dest=/etc/profile.d/enabledocker.sh owner=root group=root mode=0644
