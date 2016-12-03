@@ -1,5 +1,4 @@
 ---
 # file: roles/docker/handlers/main.yml
 - name: docker restart
-  service: name=docker state=restarted
-
+  service: name="{{ docker_exec_name }}" state=restarted

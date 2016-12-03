@@ -4,6 +4,14 @@
   include: yum_setup.yml
   when: ansible_distribution == "RedHat"
 
+- name: set docker exec name
+  set_fact: docker_exec_name="docker-latest"
+  when: docker_pkg_name == "docker-latest"
+
+- name: set docker exec name
+  set_fact: docker_exec_name="docker"
+  when: docker_pkg_name != "docker-latest"
+
 - name: EPEL install check
   command: rpm -q epel-release
   register: inst_epel
@@ -20,60 +28,70 @@
     ansible_distribution_major_version == "6" and
     inst_epel.rc != 0
 
-- name: docker install for RedHat6 family
-  yum: name="{{ docker_name_rhel6_family }}" state=present
-  when: >
-    ansible_os_family == "RedHat" and
-    ansible_distribution_major_version == "6"
+- name: docker install
+  package: name="{{ docker_pkg_name }}" state=present
 
-- name: docker install for RHEL7
-  yum: >
-    name="{{ docker_name_rhel7_family }}"
-    state=present
-    enablerepo=rhel-7-server-extras-rpms
-  when: >
-    ansible_distribution == "RedHat" and
-    ansible_distribution_major_version == "7"
+- block:
+  - name: add docker system settings for RedHat6 Family
+    template: >
+      src=etc_sysconfig_docker_rhel6_family.j2
+      dest="/etc/sysconfig/{{ docker_exec_name }}"
+      owner=root
+      group=root
+      mode=0644
+      backup=yes
+    register: is_etc_sysconfig_docker_rhel6_family_setting
+    notify: docker restart
+    when: >
+      ansible_os_family == "RedHat" and
+      ansible_distribution_major_version == "6"
 
-- name: docker install for CentOS7
-  yum: name="{{ docker_name_rhel7_family }}" state=present
-  when: >
-    ansible_distribution == "CentOS" and
-    ansible_distribution_major_version == "7"
+  - name: add docker system settings for RedHat7 family
+    template: >
+      src=etc_sysconfig_docker_rhel7_family.j2
+      dest="/etc/sysconfig/{{ docker_exec_name }}"
+      owner=root
+      group=root
+      mode=0644
+      backup=yes
+    register: is_etc_sysconfig_docker_rhel7_family_setting
+    notify: docker restart
+    when: >
+      ansible_os_family == "RedHat" and
+      ansible_distribution_major_version == "7"
 
-- name: docker install for ubuntu
-  apt: name="{{ docker_name_ubuntu }}" state=present
-  when: ansible_distribution == "Ubuntu"
+  - name: add docker logrotate settings
+    template: >
+      src=etc_logrotate.d_docker.j2
+      dest=/etc/logrotate.d/docker
+      owner=root
+      group=root
+      mode=0644
+      backup=yes
+    register: is_etc_logrotate_d_docker_setting
+    when: not (ansible_os_family == "RedHat" and ansible_distribution_major_version == "7")
 
-- name: add docker system settings for RedHat6 Family
-  template: >
-    src=etc_sysconfig_docker_rhel6_family.j2
-    dest="/etc/sysconfig/docker"
-    owner=root
-    group=root
-    mode=0644
-  notify: docker restart
-  when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "6"
+  - name: add docker user settings
+    template: >
+      src=etc_profile.d_enabledocker.sh.j2
+      dest=/etc/profile.d/enabledocker.sh
+      owner=root
+      group=root
+      mode=0644
+      backup=yes
+    register: is_enabledocker_setting
+    when: ansible_os_family == "RedHat"
 
-- name: add docker system settings for RedHat7 family
-  template: >
-    src=etc_sysconfig_docker_rhel7_family.j2
-    dest="/etc/sysconfig/{{ docker_name_rhel7_family }}"
-    owner=root
-    group=root
-    mode=0644
-  notify: docker restart
-  when: >
-    ansible_os_family == "RedHat" and
-    ansible_distribution_major_version == "7"
-
-- name: add docker logrotate settings
-  template: src=etc_logrotate.d_docker.j2 dest=/etc/logrotate.d/docker owner=root group=root mode=0644
-  when: not (ansible_os_family == "RedHat" and ansible_distribution_major_version == "7")
-
-- name: add docker user settings
-  template: src=etc_profile.d_enabledocker.sh.j2 dest=/etc/profile.d/enabledocker.sh owner=root group=root mode=0644
-  when: ansible_os_family == "RedHat"
+  always:
+  - name: common backup settings
+    include: backup.yml
+    with_flattened:
+      - "{{ is_etc_sysconfig_docker_rhel6_family_setting|default() }}"
+      - "{{ is_etc_sysconfig_docker_rhel7_family_setting|default() }}"
+      - "{{ is_etc_logrotate_d_docker_setting|default() }}"
+      - "{{ is_enabledocker_setting|default() }}"
+    loop_control:
+      loop_var: backup_item
 
 - name: enable docker service
-  service: name=docker state=started enabled=yes
+  service: name="{{ docker_exec_name }}" state=started enabled=yes
