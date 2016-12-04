@@ -73,6 +73,35 @@
       ansible_os_family == "RedHat" and
       ansible_distribution_major_version == "7"
 
+  - name: create docker systemd dir
+    file: >
+      path="/etc/systemd/system/{{ docker_exec_name }}.service.d"
+      state=directory
+      owner=root
+      group=root
+      mode=0755
+    when: >
+      not
+      (ansible_os_family == "RedHat" and
+      ansible_distribution_major_version == "6") and
+      proxy_env.http_proxy is defined
+
+  - name: docker proxy settings
+    template: >
+      src=docker_http-proxy.conf.j2
+      dest="/etc/systemd/system/{{ docker_exec_name }}.service.d"
+      owner=root
+      group=root
+      mode=0644
+      backup=yes
+    register: is_docker_proxy_setting
+    notify: docker restart
+    when: >
+      not
+      (ansible_os_family == "RedHat" and
+      ansible_distribution_major_version == "6") and
+      proxy_env.http_proxy is defined
+
   - name: add docker logrotate settings
     template: >
       src=etc_logrotate.d_docker.j2
@@ -104,6 +133,7 @@
     with_flattened:
       - "{{ is_etc_sysconfig_docker_rhel6_family_setting|default() }}"
       - "{{ is_etc_sysconfig_docker_rhel7_family_setting|default() }}"
+      - "{{ is_docker_proxy_setting|default() }}"
       - "{{ is_etc_logrotate_d_docker_setting|default() }}"
       - "{{ is_enabledocker_setting|default() }}"
     loop_control:
