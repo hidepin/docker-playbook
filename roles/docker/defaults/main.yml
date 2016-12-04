@@ -10,4 +10,5 @@ proxy_env:
 #  pool: 'pool'
 epel6_family: https://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
 docker_port: 2376
-docker_pkg_name: docker
+docker_pkg_name: 'docker'
+docker_compose_version: '1.9.0'

@@ -111,3 +111,15 @@
 
 - name: enable docker service
   service: name="{{ docker_exec_name }}" state=started enabled=yes
+
+- name: docker-compose install
+  shell: >
+    /usr/bin/curl -L "https://github.com/docker/compose/releases/download/{{ docker_compose_version}}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    creates=/usr/local/bin/docker-compose
+
+- name: add execution permission for docker-compose
+  file: >
+    path=/usr/local/bin/docker-compose
+    owner=root
+    group=root
+    mode=0755
