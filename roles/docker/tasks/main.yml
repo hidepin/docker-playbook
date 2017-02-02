@@ -112,9 +112,8 @@
       backup=yes
     register: is_etc_logrotate_d_docker_setting
     when: >
-      not
-      (ansible_os_family == "RedHat" and
-      ansible_distribution_major_version == "7")
+      ansible_os_family == "RedHat" and
+      ansible_distribution_major_version == "6"
 
   - name: add docker user settings
     template: >
