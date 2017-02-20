@@ -15,10 +15,10 @@ fi
 # pull use the ADD_REGISTRY option to list a set of registries, each prepended
 # with --add-registry flag. The first registry added will be the first registry
 # searched.
-{% if ansible_distribution == "Fedora" %}
-# ADD_REGISTRY='--add-registry'
-{% else %}
+{% if ansible_distribution == "Redhat" %}
 ADD_REGISTRY='--add-registry registry.access.redhat.com'
+{% else %}
+# ADD_REGISTRY='--add-registry'
 {% endif %}
 
 # If you want to block registries from being used, uncomment the BLOCK_REGISTRY
