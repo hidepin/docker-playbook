@@ -1,16 +1,25 @@
 # /etc/sysconfig/docker
 
 # Modify these options if you want to change the way the docker daemon runs
+{% if ansible_distribution == "Fedora" %}
+OPTIONS='-H tcp://127.0.0.1:{{docker_port}} --selinux-enabled --log-driver=journald'
+DOCKER_CERT_PATH=/etc/docker
+{% else %}
 OPTIONS='-H tcp://127.0.0.1:{{docker_port}} --selinux-enabled --log-driver=journald --signature-verification=false'
 if [ -z "${DOCKER_CERT_PATH}" ]; then
     DOCKER_CERT_PATH=/etc/docker
 fi
+{% endif %}
 
 # If you want to add your own registry to be used for docker search and docker
 # pull use the ADD_REGISTRY option to list a set of registries, each prepended
 # with --add-registry flag. The first registry added will be the first registry
 # searched.
+{% if ansible_distribution == "Fedora" %}
+# ADD_REGISTRY='--add-registry'
+{% else %}
 ADD_REGISTRY='--add-registry registry.access.redhat.com'
+{% endif %}
 
 # If you want to block registries from being used, uncomment the BLOCK_REGISTRY
 # option and give it a set of registries, each prepended with --block-registry
@@ -38,7 +47,12 @@ ADD_REGISTRY='--add-registry registry.access.redhat.com'
 #
 
 # docker-latest daemon can be used by starting the docker-latest unitfile.
+{% if ansible_distribution == "Fedora" %}
+# To use docker-latest client, uncomment below line
+#DOCKERBINARY=/usr/bin/docker-latest
+{% else %}
 # To use docker-latest client, uncomment below lines
 #DOCKERBINARY=/usr/bin/docker-latest
 #DOCKER_CONTAINERD_BINARY=/usr/bin/docker-containerd-latest
 #DOCKER_CONTAINERD_SHIM_BINARY=/usr/bin/docker-containerd-shim-latest
+{% endif %}
