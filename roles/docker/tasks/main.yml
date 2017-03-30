@@ -17,113 +17,117 @@
   register: inst_epel
   failed_when: inst_epel.rc not in [0,1]
   changed_when: inst_epel.rc != 0
-  when: >
+  when:
     ansible_os_family == "RedHat" and
     ansible_distribution_major_version == "6"
 
 - name: EPEL install
-  yum: name="{{ epel6_family }}" state=present
-  when: >
+  yum:
+    name: "{{ epel6_family }}"
+    state: present
+  when:
     ansible_os_family == "RedHat" and
     ansible_distribution_major_version == "6" and
     inst_epel.rc != 0
 
 - name: docker install
-  package: name="{{ docker_pkg_name }}" state=present
-  when: >
+  package:
+    name: "{{ docker_pkg_name }}"
+    state: present
+  when:
     not
     (ansible_distribution == "RedHat" and
     ansible_distribution_major_version == "7")
 
 - name: docker install for RHEL7
-  yum: >
-    name="{{ docker_pkg_name }}"
-    state=present
-    enablerepo=rhel-7-server-extras-rpms
-  when: >
+  yum:
+    name: "{{ docker_pkg_name }}"
+    state: present
+    enablerepo: rhel-7-server-extras-rpms
+  when:
     ansible_distribution == "RedHat" and
     ansible_distribution_major_version == "7"
 
 - block:
   - name: add docker system settings for RedHat6 Family
-    template: >
-      src=etc_sysconfig_docker_rhel6_family.j2
-      dest="/etc/sysconfig/{{ docker_exec_name }}"
-      owner=root
-      group=root
-      mode=0644
-      backup=yes
+    template:
+      src: etc_sysconfig_docker_rhel6_family.j2
+      dest: "/etc/sysconfig/{{ docker_exec_name }}"
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
     register: is_etc_sysconfig_docker_rhel6_family_setting
     notify: docker restart
-    when: >
+    when:
       ansible_os_family == "RedHat" and
       ansible_distribution_major_version == "6"
 
   - name: add docker system settings for RedHat7 family
-    template: >
-      src=etc_sysconfig_docker_rhel7_family.j2
-      dest="/etc/sysconfig/{{ docker_exec_name }}"
-      owner=root
-      group=root
-      mode=0644
-      backup=yes
+    template:
+      src: etc_sysconfig_docker_rhel7_family.j2
+      dest: "/etc/sysconfig/{{ docker_exec_name }}"
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
     register: is_etc_sysconfig_docker_rhel7_family_setting
     notify: docker restart
-    when: >
+    when:
       not
       (ansible_os_family == "RedHat" and
       ansible_distribution_major_version == "6")
 
   - name: create docker systemd dir
-    file: >
-      path="/etc/systemd/system/{{ docker_exec_name }}.service.d"
-      state=directory
-      owner=root
-      group=root
-      mode=0755
-    when: >
+    file:
+      path: "/etc/systemd/system/{{ docker_exec_name }}.service.d"
+      state: directory
+      owner: root
+      group: root
+      mode: 0755
+    when:
       not
       (ansible_os_family == "RedHat" and
       ansible_distribution_major_version == "6") and
       proxy_env.http_proxy is defined
 
   - name: docker proxy settings
-    template: >
-      src=docker_http-proxy.conf.j2
-      dest="/etc/systemd/system/{{ docker_exec_name }}.service.d/http-proxy.conf"
-      owner=root
-      group=root
-      mode=0644
-      backup=yes
+    template:
+      src: docker_http-proxy.conf.j2
+      dest: "/etc/systemd/system/{{ docker_exec_name }}.service.d/http-proxy.conf"
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
     register: is_docker_proxy_setting
     notify: docker restart
-    when: >
+    when:
       not
       (ansible_os_family == "RedHat" and
       ansible_distribution_major_version == "6") and
       proxy_env.http_proxy is defined
 
   - name: add docker logrotate settings
-    template: >
-      src=etc_logrotate.d_docker.j2
-      dest=/etc/logrotate.d/docker
-      owner=root
-      group=root
-      mode=0644
-      backup=yes
+    template:
+      src: etc_logrotate.d_docker.j2
+      dest: /etc/logrotate.d/docker
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
     register: is_etc_logrotate_d_docker_setting
-    when: >
+    when:
       ansible_os_family == "RedHat" and
       ansible_distribution_major_version == "6"
 
   - name: add docker user settings
-    template: >
-      src=etc_profile.d_enabledocker.sh.j2
-      dest=/etc/profile.d/enabledocker.sh
-      owner=root
-      group=root
-      mode=0644
-      backup=yes
+    template:
+      src: etc_profile.d_enabledocker.sh.j2
+      dest: /etc/profile.d/enabledocker.sh
+      owner: root
+      group: root
+      mode: 0644
+      backup: yes
     register: is_enabledocker_setting
     when: ansible_os_family == "RedHat"
 
@@ -140,11 +144,11 @@
       loop_var: backup_item
 
 - name: enable docker service
-  service: >
-    name="{{ docker_exec_name }}"
-    state=started
-    enabled=yes
-    daemon_reload=yes
+  service:
+    name: "{{ docker_exec_name }}"
+    state: started
+    enabled: yes
+    daemon_reload: yes
 
 - name: docker-compose install
   shell: >
@@ -152,8 +156,8 @@
     creates=/usr/local/bin/docker-compose
 
 - name: add execution permission for docker-compose
-  file: >
-    path=/usr/local/bin/docker-compose
-    owner=root
-    group=root
-    mode=0755
+  file:
+    path: /usr/local/bin/docker-compose
+    owner: root
+    group: root
+    mode: 0755
