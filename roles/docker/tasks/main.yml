@@ -17,7 +17,7 @@
   register: inst_epel
   failed_when: inst_epel.rc not in [0,1]
   changed_when: inst_epel.rc != 0
-  when:
+  when: >
     ansible_os_family == "RedHat" and
     ansible_distribution_major_version == "6"
 
@@ -25,7 +25,7 @@
   yum:
     name: "{{ epel6_family }}"
     state: present
-  when:
+  when: >
     ansible_os_family == "RedHat" and
     ansible_distribution_major_version == "6" and
     inst_epel.rc != 0
@@ -34,7 +34,7 @@
   package:
     name: "{{ docker_pkg_name }}"
     state: present
-  when:
+  when: >
     not
     (ansible_distribution == "RedHat" and
     ansible_distribution_major_version == "7")
@@ -44,7 +44,7 @@
     name: "{{ docker_pkg_name }}"
     state: present
     enablerepo: rhel-7-server-extras-rpms
-  when:
+  when: >
     ansible_distribution == "RedHat" and
     ansible_distribution_major_version == "7"
 
@@ -59,7 +59,7 @@
       backup: yes
     register: is_etc_sysconfig_docker_rhel6_family_setting
     notify: docker restart
-    when:
+    when: >
       ansible_os_family == "RedHat" and
       ansible_distribution_major_version == "6"
 
@@ -73,7 +73,7 @@
       backup: yes
     register: is_etc_sysconfig_docker_rhel7_family_setting
     notify: docker restart
-    when:
+    when: >
       not
       (ansible_os_family == "RedHat" and
       ansible_distribution_major_version == "6")
@@ -85,7 +85,7 @@
       owner: root
       group: root
       mode: 0755
-    when:
+    when: >
       not
       (ansible_os_family == "RedHat" and
       ansible_distribution_major_version == "6") and
@@ -101,7 +101,7 @@
       backup: yes
     register: is_docker_proxy_setting
     notify: docker restart
-    when:
+    when: >
       not
       (ansible_os_family == "RedHat" and
       ansible_distribution_major_version == "6") and
@@ -116,7 +116,7 @@
       mode: 0644
       backup: yes
     register: is_etc_logrotate_d_docker_setting
-    when:
+    when: >
       ansible_os_family == "RedHat" and
       ansible_distribution_major_version == "6"
 
