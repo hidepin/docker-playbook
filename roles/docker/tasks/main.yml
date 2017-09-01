@@ -25,6 +25,10 @@
   yum:
     name: "{{ epel6_family }}"
     state: present
+  register: result
+  until: result | success
+  retries: 3
+  delay: 5
   when: >
     ansible_os_family == "RedHat" and
     ansible_distribution_major_version == "6" and
@@ -34,6 +38,10 @@
   package:
     name: "{{ docker_pkg_name }}"
     state: present
+  register: result
+  until: result | success
+  retries: 3
+  delay: 5
   when: >
     not
     (ansible_distribution == "RedHat" and
@@ -44,6 +52,10 @@
     name: "{{ docker_pkg_name }}"
     state: present
     enablerepo: rhel-7-server-extras-rpms
+  register: result
+  until: result | success
+  retries: 3
+  delay: 5
   when: >
     ansible_distribution == "RedHat" and
     ansible_distribution_major_version == "7"
