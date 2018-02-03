@@ -59,7 +59,10 @@
   until: result | success
   retries: 3
   delay: 5
-  when: ntp_server is defined
+  when: >
+    ntp_server is defined and
+    ( rhel_subscription_enabled or
+    ansible_distribution != "RedHat" )
 
 - name: (rhel6 family) ntp step-tickers settings
   template:
@@ -126,7 +129,7 @@
   when: ntp_server is defined
 
 - name: (rhel6 family) backup settings
-  include: backup.yml
+  include_tasks: backup.yml
   with_flattened:
     - "{{ is_network_setting|default() }}"
     - "{{ is_ipv6_setting|default() }}"

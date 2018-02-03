@@ -1,7 +1,7 @@
 ---
 # file: roles/common/tasks/main.yml
 - name: register subscription and yum proxy setting
-  include: yum_setup.yml
+  import_tasks: yum_setup.yml
 
 - name: packages install for ansible
   package:
@@ -15,8 +15,11 @@
     - openssh-clients
     - libselinux-python
   when: >
-    ansible_os_family == "RedHat" and
-    not ansible_distribution == "Fedora"
+    ( rhel_subscription_enabled and
+    ansible_distribution == "RedHat" ) or
+    ( ansible_os_family == "RedHat" and
+    ansible_distribution != "RedHat" and
+    ansible_distribution != "Fedora" )
 
 - name: disable selinux
   shell: setenforce Permissive
@@ -57,7 +60,7 @@
 
   always:
   - name: common backup settings
-    include: backup.yml
+    include_tasks: backup.yml
     with_flattened:
       - "{{ is_selinux_setting|default() }}"
       - "{{ is_hosts_setting.results|default() }}"
@@ -66,16 +69,19 @@
       loop_var: backup_item
 
 - name: RHEL6 family only setting
-  include: rhel6_family.yml
+  import_tasks: rhel6_family.yml
   when: ansible_distribution_major_version == '6'
 
 - name: RHEL7 family only setting
-  include: rhel7_family.yml
+  import_tasks: rhel7_family.yml
   when: ansible_distribution_major_version != '6'
 
 - name: kernel update
-  include: kernel_update.yml
-  when: kernel_update
+  import_tasks: kernel_update.yml
+  when: >
+    kernel_update and
+    not ( not rhel_subscription_enabled and
+    ansible_distribution == "RedHat" )
 
 - name: update package
   package:
@@ -86,6 +92,9 @@
   retries: 3
   delay: 5
   with_items: "{{ update_pkg }}"
+  when: >
+    rhel_subscription_enabled or
+    ansible_distribution != "RedHat"
 
 - name: Add common group
   group:
@@ -105,5 +114,7 @@
   when: common_user is defined and common_user != None
 
 - name: reboot after change selinux
-  include: reboot.yml
-  when: ansible_selinux.status is undefined or ansible_selinux.status != "disabled"
+  import_tasks: reboot.yml
+  when: >
+    ansible_selinux.status is undefined or
+    ansible_selinux.status != "disabled"
