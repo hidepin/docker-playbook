@@ -4,6 +4,7 @@
   - name: input rhel_subscription username
     pause:
       prompt: "input rhel subscription username"
+      echo: yes
     run_once: true
     register: rhel_subscription_username
     when: rhel_subscription.username is undefined
@@ -11,6 +12,7 @@
   - name: input rhel_subscription password
     pause:
       prompt: "input rhel subscription password"
+      echo: no
     run_once: true
     register: rhel_subscription_password
     when: rhel_subscription.password is undefined
@@ -27,7 +29,13 @@
       username: "{{ rhel_subscription.username|default() }}"
       password: "{{ rhel_subscription.password|default() }}"
       autosubscribe: true
+
+  - name: disable rt-beta repo
+    shell: yum-config-manager --disable rhel-7-server-rt-beta-rpms
+    changed_when: false
+
   when: >
+    rhel_subscription_enabled and
     ansible_distribution == "RedHat" and
     rhel_subscription is defined
 
@@ -43,7 +51,7 @@
     register: is_yum_proxy_setting
     when: >
       ansible_os_family == "RedHat" and
-      not ansible_distribution == "Fedora"
+      ansible_distribution != "Fedora"
 
   - name: dnf proxy settings
     template:
