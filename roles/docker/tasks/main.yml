@@ -165,7 +165,9 @@
 - name: docker-compose install
   shell: >
     /usr/bin/curl -L "https://github.com/docker/compose/releases/download/{{ docker_compose_version}}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    creates=/usr/local/bin/docker-compose
+  args:
+    creates: /usr/local/bin/docker-compose
+    warn: no
 
 - name: add execution permission for docker-compose
   file:
